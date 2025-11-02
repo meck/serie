@@ -33,7 +33,7 @@ impl<'a> GraphImageManager<'a> {
         image_protocol: ImageProtocol,
         preload: bool,
     ) -> Self {
-        let image_params = ImageParams::new(graph_color_set, cell_width_type);
+        let image_params = ImageParams::new(graph_color_set, cell_width_type, true);
         let drawing_pixels = DrawingPixels::new(&image_params);
 
         let mut m = GraphImageManager {
@@ -135,17 +135,22 @@ pub enum CellWidthType {
 }
 
 impl ImageParams {
-    pub fn new(graph_color_set: &GraphColorSet, cell_width_type: CellWidthType) -> Self {
-        let (cell_width, cell_height) = get_cell_dimensions().unwrap_or((25, 50));
+    pub fn new(
+        graph_color_set: &GraphColorSet,
+        cell_width_type: CellWidthType,
+        detect_cell_size: bool,
+    ) -> Self {
+        let default_cell_size = (25, 50);
+        let (cell_width, cell_height) = match detect_cell_size {
+            true => get_cell_dimensions().unwrap_or(default_cell_size),
+            false => default_cell_size,
+        };
         let (width, height, line_width, circle_inner_radius, circle_outer_radius) =
             match cell_width_type {
-                CellWidthType::Double => (
-                    cell_width * 2,
-                    cell_height,
-                    3,
-                    cell_width * 2 / 4,
-                    cell_width * 2 / 3,
-                ),
+                CellWidthType::Double => {
+                    let inner = cell_width * 2 / 5;
+                    (cell_width * 2, cell_height, 5, inner, inner + 3)
+                }
                 CellWidthType::Single => {
                     (cell_width, cell_height, 1, cell_width / 3, cell_width / 2)
                 }
@@ -709,7 +714,7 @@ mod tests {
         let graph_color_config = GraphColorConfig::default();
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Double;
-        let image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         let drawing_pixels = DrawingPixels::new(&image_params);
         let file_name = "default_params";
 
@@ -723,7 +728,7 @@ mod tests {
         let graph_color_config = GraphColorConfig::default();
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Double;
-        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         image_params.width = 100;
         let drawing_pixels = DrawingPixels::new(&image_params);
         let file_name = "wide_image";
@@ -738,7 +743,7 @@ mod tests {
         let graph_color_config = GraphColorConfig::default();
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Double;
-        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         image_params.height = 100;
         let drawing_pixels = DrawingPixels::new(&image_params);
         let file_name = "tall_image";
@@ -753,7 +758,7 @@ mod tests {
         let graph_color_config = GraphColorConfig::default();
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Single;
-        let image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         let drawing_pixels = DrawingPixels::new(&image_params);
         let file_name = "single_cell_width";
 
@@ -767,7 +772,7 @@ mod tests {
         let graph_color_config = GraphColorConfig::default();
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Double;
-        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         image_params.circle_inner_radius = 5;
         image_params.circle_outer_radius = 12;
         let drawing_pixels = DrawingPixels::new(&image_params);
@@ -783,7 +788,7 @@ mod tests {
         let graph_color_config = GraphColorConfig::default();
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Double;
-        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let mut image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         image_params.line_width = 1;
         let drawing_pixels = DrawingPixels::new(&image_params);
         let file_name = "line_width";
@@ -807,7 +812,7 @@ mod tests {
         };
         let graph_color_set = GraphColorSet::new(&graph_color_config);
         let cell_width_type = CellWidthType::Double;
-        let image_params = ImageParams::new(&graph_color_set, cell_width_type);
+        let image_params = ImageParams::new(&graph_color_set, cell_width_type, false);
         let drawing_pixels = DrawingPixels::new(&image_params);
         let file_name = "color";
 
