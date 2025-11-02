@@ -485,15 +485,15 @@ The terminals on which each has been confirmed to work are listed below.
 
 #### Terminal graphics protocol
 
-| Terminal emulator                         | Note |
-| ----------------------------------------- | ---- |
-| [kitty](https://sw.kovidgoyal.net/kitty/) |      |
-| [Ghostty](https://ghostty.org)            |      |
+| Terminal emulator                         | Note                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------- |
+| [kitty](https://sw.kovidgoyal.net/kitty/) | tmux is supported, requires `allow-passthrough on` setting in tmux configuration |
+| [Ghostty](https://ghostty.org)            |                                                                                  |
 
 ### Unsupported environments
 
 - Sixel graphics is not supported.
-- Terminal multiplexers (screen, tmux, Zellij, etc.) are not supported.
+- With the exeption the combination of kitty and tmux, Terminal multiplexers (screen, tmux, Zellij, etc.) are not supported.
 
 ## Contributing
 
