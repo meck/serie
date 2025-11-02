@@ -134,7 +134,6 @@ fn kitty_encode(
     let total_chunks = chunks.len();
 
     let id = image_id();
-    //s.push_str(&format!("{escape}_Ga=d,d=C;{escape}\\"));
     for (i, chunk) in chunks.enumerate() {
         s.push_str(&format!("{escape}_G"));
         if i == 0 {
@@ -176,12 +175,12 @@ fn kitty_encode(
 fn kitty_clear_line(y: u16, passthru: PassthruProtocol) {
     let y = y + 1; // 1-based
     let (start, escape, end) = passthru.escape_strings();
-    print!("{start}{escape}_Ga=d,d=P,x=1,y={y};{escape}\\{end}");
+    print!("{start}{escape}_Ga=d,d=Y,y={y};{escape}\\{end}");
 }
 
 // Just keep counting up for the id
 fn image_id() -> u32 {
-    static COUNTER: AtomicU32 = AtomicU32::new(0);
+    static COUNTER: AtomicU32 = AtomicU32::new(1);
     COUNTER
         .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |x| {
             Some(x.wrapping_add(1))
