@@ -1,6 +1,7 @@
 use base64::Engine;
+use once_cell::sync::OnceCell;
 use std::env;
-use std::sync::atomic::AtomicU32;
+use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
 
 // By default assume the Iterm2 is the best protocol to use for all terminals *unless* an env
@@ -133,7 +134,7 @@ fn kitty_encode(
     let chunks = base64_str.as_bytes().chunks(chunk_size);
     let total_chunks = chunks.len();
 
-    let id = image_id();
+    let id = kitty_image_id();
     for (i, chunk) in chunks.enumerate() {
         s.push_str(&format!("{escape}_G"));
         if i == 0 {
@@ -151,8 +152,13 @@ fn kitty_encode(
     }
     s.push_str(end);
 
-    let (r, g, b) = ((id >> 16) & 0xff, (id >> 8) & 0xff, id & 0xff);
-    s.push_str(&format!("\x1b[38;2;{r};{g};{b}m"));
+    let (id_diacritic, id_r, id_g, id_b) = (
+        (id >> 24) & 0xff,
+        (id >> 16) & 0xff,
+        (id >> 8) & 0xff,
+        id & 0xff,
+    );
+    s.push_str(&format!("\x1b[38;2;{id_r};{id_g};{id_b}m"));
 
     for y in 0..cell_height {
         for x in 0..cell_width {
@@ -167,6 +173,13 @@ fn kitty_encode(
                 "{}",
                 *KITTY_DIACRITICS.get(x).unwrap_or(&KITTY_DIACRITICS[0])
             ));
+
+            s.push_str(&format!(
+                "{}",
+                *KITTY_DIACRITICS
+                    .get(id_diacritic as usize)
+                    .unwrap_or(&KITTY_DIACRITICS[0])
+            ));
         }
     }
     s
@@ -178,12 +191,19 @@ fn kitty_clear_line(y: u16, passthru: PassthruProtocol) {
     print!("{start}{escape}_Ga=d,d=Y,y={y};{escape}\\{end}");
 }
 
-// Just keep counting up for the id
-fn image_id() -> u32 {
-    static COUNTER: AtomicU32 = AtomicU32::new(1);
-    COUNTER
+// If the app is rerun with diffrent images sometimes ghostty resuses the image with the same id
+// from the previous run, so tie in the PID with the id
+fn kitty_image_id() -> u32 {
+
+    static COUNTER: AtomicU16 = AtomicU16::new(1);
+    let counter = COUNTER
         .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |x| {
             Some(x.wrapping_add(1))
         })
-        .unwrap()
+        .unwrap();
+
+    static PID_CACHE: OnceCell<u16> = OnceCell::new();
+    let pid = PID_CACHE.get_or_init(|| std::process::id() as u16);
+
+    ((*pid as u32) << 16) | (counter as u32)
 }
