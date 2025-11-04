@@ -148,11 +148,13 @@ impl ImageParams {
         let (width, height, line_width, circle_inner_radius, circle_outer_radius) =
             match cell_width_type {
                 CellWidthType::Double => {
-                    let inner = cell_width * 2 / 5;
-                    (cell_width * 2, cell_height, 5, inner, inner + 3)
+                    let width = cell_width * 2;
+                    let inner_r = width / 5;
+                    (width , cell_height, 3, inner_r, inner_r + 2)
                 }
                 CellWidthType::Single => {
-                    (cell_width, cell_height, 1, cell_width / 3, cell_width / 2)
+                    let inner_r = cell_width / 3;
+                    (cell_width, cell_height, 1, inner_r, inner_r + 2)
                 }
             };
         let edge_colors = graph_color_set
